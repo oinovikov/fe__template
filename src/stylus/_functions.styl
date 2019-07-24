@@ -1,0 +1,137 @@
+// Получить короткую запись для свойства font
+getFont($size = $font.size, $lineHeight = $font.height, $weight = $font.weight) {
+  return $font.style $font.variant $weight $size\/$lineHeight unquote($font.family);
+}
+
+// Получить базовый размер em единицы
+getBaseEm() {
+  $unit = unit($font.size);
+  $value = unit($font.size, '');
+
+  if ($unit is 'px') {
+    return $value;
+  } else if ($unit is 'pt') {
+    return $value / 3 * 4;
+  } else {
+    return 16;
+  }
+}
+
+// Конвертировать пиксели в em
+px2em($px) {
+  return unit($px / getBaseEm(), 'em');
+}
+
+// Конвертировать пиксели в rem
+px2rem($px) {
+  return unit($px / getBaseEm(), 'rem');
+}
+
+// Конвертировать пиксели в пункты
+px2pt($px) {
+  return unit($px * .75, 'pt');
+}
+
+// Имитация кроссбраузерного миксина для css функции calc()
+calc() {
+  add-property(current-property[0], s('-webkit-calc(%s)', arguments));
+  add-property(current-property[0], s('-moz-calc(%s)', arguments));
+  s('calc(%s)', arguments);
+}
+
+
+
+// getMediaQueryWidth($i, $unit = 'em')
+//   return s('%s' + $unit, ($layoutBreakpoints[$i] + ($i < $layoutFixedStart ? $layoutBreakpointsMarginSmall : $layoutBreakpointsMarginBig)) / $em)
+
+// Получить ширину для медиа запроса
+getMQWidth($i) {
+  return unit(($breakpoints[$i] + ($spaces.margin.desktop * 2) + $spaces.safe.desktop) / getBaseEm(), 'em');
+}
+
+// getMQGaps() {
+//   for point, i in $layoutBreakpoints
+//     @media all and (min-width: getMQWidth(i))
+//       if i in $layoutGaps
+//         padding 0 s('%dem', $layoutGaps[s('%s',i)] / 2 / $em)
+// }
+
+
+/* styling parent text selection */
+selection($bg = #bb6bd9, $text = #020301)
+  & ::-moz-selection
+    background-color $bg
+    color $text
+    text-shadow none
+
+  & ::selection
+    background-color $bg
+    color $text
+    text-shadow none
+
+
+/* styling scrollbar */
+scroll($barBg = #fff, $thumbBg = #333, $thumbHoverBg = #444, $borderColor = transparent)
+  if $barBg == 'none'
+    -ms-overflow-style none
+
+    &::-webkit-scrollbar
+      display none
+
+      &-button, &-thumb, &-track, &-corner
+        display none
+  else
+    -ms-overflow-style -ms-autohiding-scrollbar
+
+    &::-webkit-scrollbar
+      if $borderColor != transparent
+        width .5em
+        height .5em
+      else
+        width .25em
+        height .25em
+      background-color ($barBg ?: transparent)
+
+      &-button
+        width 0
+        height 0
+        background transparent
+
+      &-thumb
+        if $borderColor != transparent
+          border .125em solid $borderColor
+          border-radius .25em
+        else
+          border-radius .125em
+        background-color $thumbBg
+
+        &:hover
+          background-color $thumbHoverBg
+
+      &-track
+        margin px2em(2)
+        background-color $borderColor
+
+      &-corner
+        background-color $barBg
+
+placeholder($font = getFont(), $color = #eee)
+  &::-webkit-input-placeholder
+    font: $font
+    color: $color
+
+  &::-moz-placeholder
+    font: $font
+    color: $color
+
+  &:-ms-input-placeholder
+    font: $font
+    color: $color
+
+  &:-moz-placeholder
+    font: $font
+    color: $color
+
+  &::placeholder
+    font: $font
+    color: $color

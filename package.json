@@ -1,0 +1,35 @@
+{
+  "name": "fe__template",
+  "version": "1.0.0",
+  "description": "My own template for front-end development",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/oinovikov/fe__template"
+  },
+  "keywords": [
+    "front-end",
+    "html",
+    "css",
+    "js",
+    "gulp",
+    "stylus",
+    "pug"
+  ],
+  "author": "Oleg Novikov <hello@olegn.ru> (https://olegn.ru)",
+  "license": "ISC",
+  "homepage": "https://github.com/oinovikov/",
+  "main": "gulpfile.js",
+  "dependencies": {
+    "gulp": "^4.0.2",
+    "stylus": "^0.54.5",
+    "pug": "^2.0.4",
+    "gulp-concat": "^2.6.1",
+    "gulp-stylus": "^2.7.0",
+    "gulp-pug": "^4.0.1",
+    "gulp-uglify": "^3.0.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}

@@ -1,0 +1,133 @@
+// Параметры шрифта
+$font = {
+  style: normal,
+  variant: normal,
+  weight: 400,
+  size: 12pt,
+  height: 1,
+  family: "'Source Sans Pro', Arial, Helvetica, sans-serif"
+}
+
+// Base em size
+$em = 16
+
+// Num columns in responsive layout grid
+$grid = 12
+
+$colors = {
+  primary: #b61414,
+  header: #1e1e23,
+  nav: #2b2b33
+}
+
+// Navigation drawer sizes
+// $nav = 240
+$nav = {
+  width: {
+    mobile: 288,
+    desktop: 240
+  },
+  height: 40
+}
+
+// Page header height
+$header = {
+  height: {
+    mobile: 48,
+    desktop: 64
+  },
+  zIndex: 5,
+  bgColor: #1e1e23
+}
+
+
+// Break points for responsive layout
+$layoutBreakpoints = 288 432 576 720 864 1008 1152 1296 1440
+
+// Layout left/right margin
+$layoutBreakpointsMarginSmall = 0
+$layoutBreakpointsMarginBig = 48
+
+// Layout grid gap 24px start with break point element
+$layoutGapStart = 2
+$layoutGaps = {
+  '0': 24,
+  '2': 24,
+  '4': 24,
+  '8': 24
+}
+// $layoutGaps = (0 6) (2 12) (4 18) (8 24)
+$layoutGapDefault = $layoutGaps['0']
+
+// Layout stepped start with break point element
+$layoutFixedStart = 4
+
+// Layout start biggest screen
+$layoutBigStart = length($layoutBreakpoints) - 1
+
+
+$layout = {
+  fixed: false,
+  width: 0,
+  margin: 6,
+  gap: 12,
+  safe: 0
+}, {
+  fixed: false,
+  width: 864,
+  margin: 12,
+  gap: 24,
+  safe: 0
+}, {
+  fixed: false,
+  width: 1008,
+  margin: 12,
+  gap: 24,
+  safe: 24
+}, {
+  fixed: false,
+  width: 1152,
+  margin: 12,
+  gap: 24,
+  safe: 24
+}, {
+  fixed: true,
+  width: 1296,
+  margin: 12,
+  gap: 24,
+  safe: 24
+}
+
+// Screen sizes
+$screens = {
+  // xs: 288,
+  // sm: 576,
+  // md: 781,
+  // lg: 1201,
+  xs: 288+24,
+  sm: 576,
+  md: 864,
+  lg: 1152,
+}
+
+$spaces = {
+  gap: {
+    mobile: 12,
+    desktop: 24
+  },
+  margin: {
+    mobile: 6,
+    desktop: 12
+  },
+  safe: {
+    mobile: 0,
+    desktop: 24
+  }
+}
+
+$breakpoints = 864 1008 1152 1296 1440
+// $breakpoints = (1200 - 48)
+
+$layoutWidth = 100%
+
+$contentMaxWidth = 1224
