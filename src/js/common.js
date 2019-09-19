@@ -1,3 +1,3 @@
 document.addEventListener('DOMContentLoaded', function () {
-    //
-}, false);
+    document.documentElement.insertBefore(document.querySelector('.' + $pageRootClassName + '__shadows'), document.body.nextSibling);
+}, window.passiveSupported ? { passive: true } : false);
