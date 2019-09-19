@@ -1,16 +1,21 @@
+include _variables
+include _mixins
+
 <!DOCTYPE html>
-html(lang="ru")
+html(class=$pageRootClassName, lang="ru")
     head
         meta(charset="utf-8")
-        meta(name="viewport", content="width=device-width, initial-scale=1.0")
+        meta(name="viewport", content="width=device-width, initial-scale=1.0, shrink-to-fit=no, viewport-fit=cover, minimal-ui")
         meta(http-equiv="X-UA-Compatible", content="ie=edge")
 
+        link(rel="stylesheet", href=$fontSrc)
         link(rel="stylesheet", href="css/common.css")
 
         script(src="js/common.js")
 
         title Document
-    body
-        include components/header.html
-        include components/main.pug
-        include components/footer.html
+    body(class=`${$pageRootClassName}__body`, itemid="localhost:8000", itemscope, itemtype="http://schema.org/SocialMediaPosting")
+        include sections/header
+        include sections/main
+        include sections/footer
+    include sections/shadows

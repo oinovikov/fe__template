@@ -1,9 +1,10 @@
-// Получить короткую запись для свойства font
+/* Get short value font property */
 getFont($size = $font.size, $lineHeight = $font.height, $weight = $font.weight) {
   return $font.style $font.variant $weight $size\/$lineHeight unquote($font.family);
 }
 
-// Получить базовый размер em единицы
+
+/* Get base (root) em size */
 getBaseEm() {
   $unit = unit($font.size);
   $value = unit($font.size, '');
@@ -17,22 +18,24 @@ getBaseEm() {
   }
 }
 
-// Конвертировать пиксели в em
+
+/* Convert px to em */
 px2em($px) {
   return unit($px / getBaseEm(), 'em');
 }
 
-// Конвертировать пиксели в rem
+/* Convert px to rem */
 px2rem($px) {
   return unit($px / getBaseEm(), 'rem');
 }
 
-// Конвертировать пиксели в пункты
+/* Convert px to pt */
 px2pt($px) {
   return unit($px * .75, 'pt');
 }
 
-// Имитация кроссбраузерного миксина для css функции calc()
+
+/* Imitation crossbrowser mixin for css calc() function */
 calc() {
   add-property(current-property[0], s('-webkit-calc(%s)', arguments));
   add-property(current-property[0], s('-moz-calc(%s)', arguments));
@@ -40,37 +43,22 @@ calc() {
 }
 
 
-
-// getMediaQueryWidth($i, $unit = 'em')
-//   return s('%s' + $unit, ($layoutBreakpoints[$i] + ($i < $layoutFixedStart ? $layoutBreakpointsMarginSmall : $layoutBreakpointsMarginBig)) / $em)
-
-// Получить ширину для медиа запроса
+/* Get Media query width */
 getMQWidth($i) {
-  return unit(($breakpoints[$i] + ($spaces.margin.desktop * 2) + $spaces.safe.desktop) / getBaseEm(), 'em');
+  return px2em($pageLayout.screens[$i] + ($pageLayout.screens[$i] == 0 ? 0 : $pageLayout.marginPage[$i] * 2))
 }
 
-// getMQGaps() {
-//   for point, i in $layoutBreakpoints
-//     @media all and (min-width: getMQWidth(i))
-//       if i in $layoutGaps
-//         padding 0 s('%dem', $layoutGaps[s('%s',i)] / 2 / $em)
-// }
 
-
-/* styling parent text selection */
+/* Styling parent text selection */
 selection($bg = #bb6bd9, $text = #020301)
-  & ::-moz-selection
-    background-color $bg
-    color $text
-    text-shadow none
-
-  & ::selection
-    background-color $bg
-    color $text
-    text-shadow none
+  for $prefix in ('::-moz-' '::')
+    & {$prefix}selection
+      background-color $bg
+      color $text
+      text-shadow none
 
 
-/* styling scrollbar */
+/* Styling scrollbar */
 scroll($barBg = #fff, $thumbBg = #333, $thumbHoverBg = #444, $borderColor = transparent)
   if $barBg == 'none'
     -ms-overflow-style none
@@ -115,23 +103,61 @@ scroll($barBg = #fff, $thumbBg = #333, $thumbHoverBg = #444, $borderColor = tran
       &-corner
         background-color $barBg
 
+
+/* Generate crossbrowser fields placeholder */
 placeholder($font = getFont(), $color = #eee)
-  &::-webkit-input-placeholder
-    font: $font
-    color: $color
+  for $prefix in ('::-webkit-input-' '::-moz-' ':-ms-input-' ':-moz-' '::')
+    &{$prefix}placeholder
+      font: $font
+      color: $color
+      if @letter-spacing
+        letter-spacing: @letter-spacing
+      text-overflow: ellipsis
 
-  &::-moz-placeholder
-    font: $font
-    color: $color
 
-  &:-ms-input-placeholder
-    font: $font
-    color: $color
+/* Mixin in mixins crossbrowser properties names */
+getMixinArguments($args, $props)
+  $prefixCurrentProp = (match('-(\w+)-', current-property[0]))[1]
 
-  &:-moz-placeholder
-    font: $font
-    color: $color
+  if join(' ', $args[0]) == join(' ', $args[0][0])
+    $args = join(' ', $args)
 
-  &::placeholder
-    font: $font
-    color: $color
+  for $arg in $args
+    $arg = join(' ', $arg)
+
+    for $name, $prefix in $props
+      if match($name, $arg, 'i')
+        if $prefixCurrentProp and index($prefix, $prefixCurrentProp) >= 0
+          $nameWithPrefix = '-' + $prefixCurrentProp + '-' + $name
+          if !($res is defined)
+            $res = replace($name + '(?:\(\))?', $nameWithPrefix, $arg)
+          else
+            push($res, replace($name + '(?:\(\))?', $nameWithPrefix, $arg))
+        else
+          for $i in 0...length($prefix)
+            $nameWithPrefix = '-' + $prefix[$i] + '-' + $name
+            if !($res is defined)
+              $res = replace($name + '(?:\(\))?', $nameWithPrefix, $arg)
+            else
+              push($res, replace($name + '(?:\(\))?', $nameWithPrefix, $arg))
+
+    if !($res is defined)
+      $res = replace('\(\)', '', $arg)
+    else
+      push($res, replace('\(\)', '', $arg))
+
+  $res = unquote(join(',', $res))
+  return $res
+
+
+/* Generate css properties with prefixes */
+getXBrowserProps($args, $prefixes)
+  for $prefix in $prefixes
+    if current-property[1] == __CALL__
+      add-property('-' + $prefix + '-' + current-property[0], $args)
+    else
+      -{$prefix}-{current-property}: getMixinArguments($args, $mixinPropsPrefixes)
+  if current-property[1] == __CALL__
+    $args
+  else
+    {current-property}: getMixinArguments($args, $mixinPropsPrefixes)
