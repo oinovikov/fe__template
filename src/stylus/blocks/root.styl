@@ -1,8 +1,10 @@
-// app
+// root
 
-.{$pageRootClassName}
+.{$rootClassName}
   zoom: 1
   position: relative
+  top: 0
+  left: 0
   z-index: 1
   display: table
   table-layout: fixed
@@ -15,17 +17,31 @@
   border: none
   border-collapse: collapse
   outline: none
-  background: $pageLayout.bgColor.light
-  font-size: 100%
+  background: $themes.base.root.bgColor
+  font: getFont()
+  color: $themes.base.root.textColor
   text-size-adjust: 100%
+  font-kerning: normal
+  letter-spacing: normal
+  word-wrap: break-word
+  word-break: break-word
+  overflow-wrap: break-word
+  white-space: normal
+  text-transform: none
+  direction: ltr
+  -webkit-font-smoothing: antialiased
+  text-rendering: optimizeLegibility
+  -moz-osx-font-smoothing: grayscale
+  font-feature-settings: $font.features
+  opacity: 1
   overflow-x: auto
   overflow-y: scroll
   -webkit-tap-highlight-color: transparent
   -webkit-overflow-scrolling: touch
-  transition: background-color .24s linear
-  caret-color: #03a9f4
+  transition: background-color .24s ease
+  caret-color: $themes.base.root.caretColor
 
-  selection(#81d4fa, #111)
+  selection($themes.base.root.selection.bgColor, $themes.base.root.selection.textColor)
 
   @media all and (min-width: 0)
     display: block
@@ -40,10 +56,12 @@
     user-select: none
     pointer-events: none
 
-  &_theme_dark
-    background-color: $pageLayout.bgColor.dark
+  for $themeOptions, $themeName in $themes {
+    &_theme_{$themeName}
+      background-color: $pageLayout.bgColor.dark
 
-    selection(#01579b, #eee)
+      selection(#01579b, #eee)
+  }
 
   &__body
     zoom: 1
@@ -61,20 +79,8 @@
     outline: none
     margin: 0
     background: transparent
-    font: getFont()
-    font-kerning: normal
-    letter-spacing: normal
-    word-wrap: break-word
-    word-break: break-word
-    overflow-wrap: break-word
-    white-space: normal
-    text-transform: none
-    direction: ltr
-    -webkit-font-smoothing: antialiased
-    text-rendering: optimizeLegibility
-    -moz-osx-font-smoothing: grayscale
-    font-feature-settings: 'liga', 'kern'
-    overflow: visible
+    font-size: 100%
+    overflow-x: hidden
     opacity: 1
 
     @media all and (min-width: 0vw)

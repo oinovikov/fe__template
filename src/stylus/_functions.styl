@@ -1,6 +1,6 @@
 /* Get short value font property */
 getFont($size = $font.size, $lineHeight = $font.height, $weight = $font.weight) {
-  return $font.style $font.variant $weight $size\/$lineHeight unquote($font.family);
+  return s('%s %s %s %s/%s %s', $font.style, $font.variant, $weight, $size, $lineHeight, unquote($font.family));
 }
 
 
@@ -19,9 +19,9 @@ getBaseEm() {
 }
 
 
-/* Convert px to em */
-px2em($px) {
-  return unit($px / getBaseEm(), 'em');
+/* Convert px to em ($base is em-size) */
+px2em($px, $base = getBaseEm()) {
+  return unit($px / $base, 'em');
 }
 
 /* Convert px to rem */
@@ -35,129 +35,100 @@ px2pt($px) {
 }
 
 
-/* Imitation crossbrowser mixin for css calc() function */
-calc() {
-  add-property(current-property[0], s('-webkit-calc(%s)', arguments));
-  add-property(current-property[0], s('-moz-calc(%s)', arguments));
-  s('calc(%s)', arguments);
-}
-
-
 /* Get Media query width */
 getMQWidth($i) {
   return px2em($pageLayout.screens[$i] + ($pageLayout.screens[$i] == 0 ? 0 : $pageLayout.marginPage[$i] * 2))
 }
 
 
-/* Styling parent text selection */
-selection($bg = #bb6bd9, $text = #020301)
-  for $prefix in ('::-moz-' '::')
-    & {$prefix}selection
-      background-color $bg
-      color $text
-      text-shadow none
+/* Generate crossbrowser property arguments */
+getXBrowserArgs($arguments) {
+  $args = ()
+  $res = ()
 
+  if (list-separator($arguments) == ',') {
+    for $arg in $arguments {
+      push($args, join(' ', $arg))
+    }
+  } else {
+    push($args, join(' ', $arguments))
+  }
 
-/* Styling scrollbar */
-scroll($barBg = #fff, $thumbBg = #333, $thumbHoverBg = #444, $borderColor = transparent)
-  if $barBg == 'none'
-    -ms-overflow-style none
+  for $arg, $i in $args {
+    $arg = split(' ', $arg)
+    $arg[0] = $propName = replace('\(\)$', '', join('', $arg[0]))
+    $argSrc = join(' ', $arg)
 
-    &::-webkit-scrollbar
-      display none
+    if ($mixinPropsPrefixes[$arg[0]]) {
+      $propPrefix = (match('-(\w+)-', current-property[0]))[1]
 
-      &-button, &-thumb, &-track, &-corner
-        display none
-  else
-    -ms-overflow-style -ms-autohiding-scrollbar
+      if ($propPrefix and index($mixinPropsPrefixes[$arg[0]], $propPrefix) is not null) {
+        $arg[0] = unquote('-' + $propPrefix + '-' + $propName)
+        push($res, unquote(join(' ', $arg)))
+      } else {
+        for $prefix in $mixinPropsPrefixes[$arg[0]] {
+          $arg[0] = unquote('-' + $prefix + '-' + $propName)
+          push($res, unquote(join(' ', $arg)))
+        }
+      }
+    }
 
-    &::-webkit-scrollbar
-      if $borderColor != transparent
-        width .5em
-        height .5em
-      else
-        width .25em
-        height .25em
-      background-color ($barBg ?: transparent)
+    push($res, unquote($argSrc))
+  }
 
-      &-button
-        width 0
-        height 0
-        background transparent
-
-      &-thumb
-        if $borderColor != transparent
-          border .125em solid $borderColor
-          border-radius .25em
-        else
-          border-radius .125em
-        background-color $thumbBg
-
-        &:hover
-          background-color $thumbHoverBg
-
-      &-track
-        margin px2em(2)
-        background-color $borderColor
-
-      &-corner
-        background-color $barBg
-
-
-/* Generate crossbrowser fields placeholder */
-placeholder($font = getFont(), $color = #eee)
-  for $prefix in ('::-webkit-input-' '::-moz-' ':-ms-input-' ':-moz-' '::')
-    &{$prefix}placeholder
-      font: $font
-      color: $color
-      if @letter-spacing
-        letter-spacing: @letter-spacing
-      text-overflow: ellipsis
-
-
-/* Mixin in mixins crossbrowser properties names */
-getMixinArguments($args, $props)
-  $prefixCurrentProp = (match('-(\w+)-', current-property[0]))[1]
-
-  if join(' ', $args[0]) == join(' ', $args[0][0])
-    $args = join(' ', $args)
-
-  for $arg in $args
-    $arg = join(' ', $arg)
-
-    for $name, $prefix in $props
-      if match($name, $arg, 'i')
-        if $prefixCurrentProp and index($prefix, $prefixCurrentProp) >= 0
-          $nameWithPrefix = '-' + $prefixCurrentProp + '-' + $name
-          if !($res is defined)
-            $res = replace($name + '(?:\(\))?', $nameWithPrefix, $arg)
-          else
-            push($res, replace($name + '(?:\(\))?', $nameWithPrefix, $arg))
-        else
-          for $i in 0...length($prefix)
-            $nameWithPrefix = '-' + $prefix[$i] + '-' + $name
-            if !($res is defined)
-              $res = replace($name + '(?:\(\))?', $nameWithPrefix, $arg)
-            else
-              push($res, replace($name + '(?:\(\))?', $nameWithPrefix, $arg))
-
-    if !($res is defined)
-      $res = replace('\(\)', '', $arg)
-    else
-      push($res, replace('\(\)', '', $arg))
-
-  $res = unquote(join(',', $res))
-  return $res
+  return unquote(join(',', $res))
+}
 
 
 /* Generate css properties with prefixes */
-getXBrowserProps($args, $prefixes)
-  for $prefix in $prefixes
-    if current-property[1] == __CALL__
-      add-property('-' + $prefix + '-' + current-property[0], $args)
-    else
-      -{$prefix}-{current-property}: getMixinArguments($args, $mixinPropsPrefixes)
-  if current-property[1] == __CALL__
-    $args
-  else
-    {current-property}: getMixinArguments($args, $mixinPropsPrefixes)
+getXBrowserProps($args, $prefixes) {
+  $propsWithEnumerate = 'transition'//, 'transition-property'
+
+  for $prefix, $i in $prefixes {
+    if (index($propsWithEnumerate, current-property[0]) is not null) {
+      -{$prefix}-{current-property}: getXBrowserArgs($args);
+
+      if ($i == length($prefixes) - 1) {
+        {current-property}: getXBrowserArgs($args);
+      }
+    } else {
+      -{$prefix}-{current-property}: $args;
+
+      if ($i == length($prefixes) - 1) {
+        {current-property}: $args;
+      }
+    }
+  }
+}
+
+
+/* Proxy for properties blocks */
+applyPropMixin($block) {
+  if (IS_PRODUCTION) {
+    +cache(current-property) {
+      {$block}
+    }
+  } else {
+    {$block}
+  }
+}
+
+
+/* Extending property with crossbrowser css functions (e.g., "linear-gradient") */
+extendPropWithXArgs($phrases, $prefixes) {
+  $value = join(list-separator(current-property[1]), current-property[1]);
+
+  for $prefix in $prefixes {
+    $_value = clone($value);
+
+    if (match('/' + $phrase + '/', $_value)) {
+      for $phrase in $phrases {
+        $_value = replace('\b' + $phrase + '\b', s('-%s-%s', $prefix, $phrase), $_value)
+      }
+
+      add-property(current-property[0], unquote($_value));
+    }
+  }
+
+  add-property(current-property[0], unquote($value));
+}
