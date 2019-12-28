@@ -1,5 +1,5 @@
 // Page base classname
-$pageRootClassName = 'page'
+$rootClassName = 'page'
 
 // Font options
 $font = {
@@ -8,11 +8,29 @@ $font = {
   weight: 400,
   size: 12pt,
   height: 1.25,
-  family: "'Open Sans', Verdana, Geneva, sans-serif",
+  family: {
+    base: "'Open Sans', Verdana, Geneva, sans-serif"
+  },
+  features: 'liga' 1, 'dlig' 1, 'kern' 1, 'tnum' 1, 'zero' 1,
 }
 
 // Num columns in responsive layout grid
 $grid = 12
+
+// Themes
+$themes = {
+  base: {
+    root: {
+      bgColor: #fff,
+      textColor: rgba(0, 0, 0, .88),
+      caretColor: #03a9f4,
+      selection: {
+        bgColor: #81d4fa,
+        textColor: #111,
+      }
+    },
+  },
+}
 
 // Page layout options
 $pageLayout = {
