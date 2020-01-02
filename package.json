@@ -1,10 +1,10 @@
 {
   "name": "fe__template",
-  "version": "1.1.0",
+  "version": "2.0.0",
   "description": "My own template for front-end development",
   "repository": {
     "type": "git",
-    "url": "https://github.com/oinovikov/fe__template"
+    "url": "git+https://github.com/oinovikov/fe__template.git"
   },
   "keywords": [
     "front-end",
@@ -20,16 +20,35 @@
   "homepage": "https://github.com/oinovikov/",
   "main": "gulpfile.js",
   "dependencies": {
+    "@babel/core": "^7.7.7",
+    "@babel/preset-env": "^7.7.7",
+    "browser-sync": "^2.26.7",
+    "deepmerge": "^4.2.2",
     "gulp": "^4.0.2",
-    "stylus": "^0.54.5",
     "pug": "^2.0.4",
+    "stylus": "^0.54.5",
+    "rollup": "^1.27.14",
+    "eslint-plugin-import": "^2.19.1",
+    "eslint-plugin-jsdoc": "^19.2.0",
     "gulp-concat": "^2.6.1",
-    "gulp-stylus": "^2.7.0",
     "gulp-pug": "^4.0.1",
-    "gulp-uglify": "^3.0.2"
+    "gulp-stylus": "^2.7.0",
+    "rollup-plugin-multi-entry": "^2.1.0",
+    "rollup-plugin-node-resolve": "^5.2.0",
+    "rollup-plugin-eslint": "^7.0.0",
+    "rollup-plugin-babel": "^4.3.3",
+    "rollup-plugin-terser": "^5.1.3"
   },
   "devDependencies": {},
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "npm run init",
+    "init": "npm init && npm i && (mkdir -p ./src/blocks & mkdir -p ./src/pages & mkdir -p ./src/lib & mkdir -p ./public)",
+    "serve-php": "php -S 0.0.0.0:8000 -t ./public",
+    "serve": "gulp serve",
+    "dev": "gulp dev",
+    "build": "gulp --prod",
+    "v-patch": "npm version patch",
+    "v-minor": "npm version minor",
+    "v-major": "npm version major"
   }
 }
