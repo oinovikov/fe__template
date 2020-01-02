@@ -71,7 +71,7 @@ For default javascript and stylus build tasks looking for index files (```index.
 
 Global NPM init example code
 ---
-This code is useful for getting started quickly with this template in the future.
+This code is useful for getting started quickly with that template in the future. Create ```.npm-init.js``` in system home directory (on Windows, that’s usually c/Users/<username> , and on Mac, it’s /Users/<username>) with next script:
 ```javascript
 const path = require('path');
 
@@ -83,6 +83,8 @@ module.exports = {
   keywords: prompt(function (s) { return Array.from(new Set(package.keywords.concat(s.split(/\s+/)))) }, package.keywords),
 }
 ```
+For check default path to file with that script can run: ```npm config get init-module```.
+For set path to file with that script can run: ```npm config set init-module ~\.npm-init.js```.
 
 ---
 https://olegn.ru
