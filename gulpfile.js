@@ -6,11 +6,11 @@ const gulp = require('gulp');
 const rollup = require('rollup');
 const browserSync = require('browser-sync').create();
 
-const rollupMultiEntry = require('rollup-plugin-multi-entry');
-const rollupResolve = require('rollup-plugin-node-resolve');
+const rollupMultiEntry = require('@rollup/plugin-multi-entry');
+const rollupResolve = require('@rollup/plugin-node-resolve');
 const rollupBabel = require('rollup-plugin-babel');
-const {eslint: rollupEslint} = require('rollup-plugin-eslint');
-const {terser: rollupTerser} = require('rollup-plugin-terser');
+const { eslint: rollupEslint } = require('rollup-plugin-eslint');
+const { terser: rollupTerser } = require('rollup-plugin-terser');
 
 const gulpStylus = require('gulp-stylus');
 const gulpPug = require('gulp-pug');
@@ -197,7 +197,7 @@ const defaultOptions = {
     },
 };
 
-let userOptions = {};
+let userOptions = { };
 
 if (fs.existsSync(configFilePath)) {
     userOptions = require(configFilePath);
@@ -209,26 +209,27 @@ const options = deepmerge(defaultOptions, userOptions);
 function compileHTML() {
     const pagesDirPath = path.join(options.gulp.src, options.pug.src);
 
+    unlinkFilesByExt(options.gulp.dest, 'html');
+
     return (async function () {
         return fs.readdir(pagesDirPath, (err, files) => {
             if (err) throw err;
 
-            files
-                .forEach((file) => {
-                    let filePath = path.join(pagesDirPath, file);
+            files.forEach((file) => {
+                const filePath = path.join(pagesDirPath, file);
 
-                    fs.stat(filePath, (err, stats) => {
-                        if (err) throw err;
+                fs.stat(filePath, (err, stats) => {
+                    if (err) throw err;
 
-                        let indexFilePath = path.join(filePath, 'pug', 'index.pug');
+                    const indexFilePath = path.join(filePath, 'pug', 'index.pug');
 
-                        if (stats.isDirectory() && fs.existsSync(indexFilePath)) {
-                            compile(indexFilePath, path.join(options.gulp.dest, file));
-                        } else if (stats.isFile()) {
-                            compile(filePath, options.gulp.dest);
-                        }
-                    });
+                    if (stats.isDirectory() && fs.existsSync(indexFilePath)) {
+                        compile(indexFilePath, path.join(options.gulp.dest, file));
+                    } else if (stats.isFile()) {
+                        compile(filePath, options.gulp.dest);
+                    }
                 });
+            });
         });
     })();
 
@@ -243,8 +244,16 @@ function compileHTML() {
     };
 };
 
+
+/**
+ * Build styles.
+ */
 function compileCSS() {
     const mainFilePath = path.join(options.gulp.src, 'main.styl');
+    const dest = path.parse(options.stylus.dest);
+    const destDirPath = path.join(options.gulp.dest, dest.dir);
+
+    clearDir(destDirPath);
 
     if (fs.existsSync(mainFilePath)) {
         return compile(mainFilePath);
@@ -253,20 +262,26 @@ function compileCSS() {
     }
 
     function compile(src) {
-        const dest = path.parse(options.stylus.dest);
-
         return gulp
             .src(src)
             .pipe(gulpStylus({
                 compress: isProdEnv() & options.stylus.minify,
             }))
             .pipe(gulpConcat(dest.base, { newLine: '' }))
-            .pipe(gulp.dest(path.join(options.gulp.dest, dest.dir)));
+            .pipe(gulp.dest(destDirPath));
     }
 };
 
+
+/**
+ * Build javascript.
+ */
 function compileJS() {
     const mainFilePath = path.join(options.gulp.src, 'main.js');
+    const dest = path.parse(options.js.dest);
+    const destDirPath = path.join(options.gulp.dest, dest.dir);
+
+    clearDir(destDirPath);
 
     if (fs.existsSync(mainFilePath)) {
         return compile(mainFilePath);
@@ -275,8 +290,6 @@ function compileJS() {
     }
 
     function compile(src) {
-        const dest = path.parse(options.js.dest);
-
         return rollup.rollup({
             input: src,
             plugins: [
@@ -294,7 +307,7 @@ function compileJS() {
             ],
         }).then(bundle => {
             return bundle.write({
-                file: path.join(options.gulp.dest, dest.dir, dest.base),
+                file: path.join(destDirPath, dest.base),
                 format: options.js.format,
                 sourcemap: options.js.sourcemap,
             });
@@ -302,6 +315,11 @@ function compileJS() {
     }
 };
 
+
+/**
+ * Start node server for local debug
+ * and open destination source in browser.
+ */
 function serve() {
     browserSync.init(null, {
         server: {
@@ -320,20 +338,124 @@ function serve() {
     });
 };
 
+
+/**
+ * Start watch for source files.
+ */
 function watch() {
     gulp.watch(path.join(options.gulp.src, '**', '*.(pug|html)'), compileHTML);
     gulp.watch(path.join(options.gulp.src, '**', '*.styl'), compileCSS);
     gulp.watch(path.join(options.gulp.src, '**', '*.js'), compileJS);
 };
 
+
+/**
+ * Clear default destination directory.
+ *
+ * @returns {Function}
+ */
+function clear() {
+    return (async function () {
+        clearDir(options.gulp.dest, true);
+    })();
+};
+
+
+/**
+ * Clean passed directory.
+ *
+ * @param {(string|Buffer|URL)} dirPath
+ *   Path to dir that must be cleaned.
+ *
+ * @param {boolean} [selfUnlink=false]
+ *   Passed dir must be deleted.
+ */
+function clearDir(dirPath, selfUnlink = false) {
+    if (!fs.existsSync(dirPath)) {
+        return;
+    }
+
+    const files = fs.readdirSync(dirPath);
+
+    files.forEach((file, i) => {
+        const filePath = path.join(dirPath, file);
+        const fileStats = fs.statSync(filePath);
+
+        if (fileStats.isDirectory()) {
+            clearDir(filePath, true);
+        } else if (fileStats.isFile()) {
+            fs.unlinkSync(filePath);
+
+            if (i === files.length - 1 && selfUnlink) {
+                fs.rmdirSync(dirPath);
+            }
+        }
+    });
+};
+
+
+/**
+ * Remove files with defined extension name.
+ *
+ * @param {(string|Buffer|URL)} dirPath
+ *   Path to directory with necessary files.
+ *
+ * @param {(string|Array)} filesExt
+ *   Files extension name or array of extensions.
+ */
+function unlinkFilesByExt(dirPath, filesExt) {
+    if (!fs.existsSync(dirPath)) {
+        return;
+    }
+
+    const filesExtNames = [ ];
+
+    if (typeof filesExt === 'string') {
+        filesExtNames.push(filesExt);
+    } else if (filesExt instanceof Array) {
+        Array.prototype.push.apply(filesExtNames, filesExt);
+    } else {
+        throw TypeError('Second argument must be a string or array of strings.');
+    }
+
+    Array.prototype.map.apply(filesExtNames, [ normalizeExtName ]);
+
+    const files = fs.readdirSync(dirPath);
+
+    files.forEach((file) => {
+        const filePath = path.join(dirPath, file);
+        const fileStats = fs.stat(filePath);
+
+        if (fileStats.isDirectory()) {
+            unlinkFilesByExt(filePath, filesExtNames);
+        } else if (fileStats.isFile() && filesExtNames.indexOf(normalizeExtName(path.extname(filePath))) !== -1) {
+            fs.unlinkSync(filePath);
+        }
+    });
+
+    function normalizeExtName(extName) {
+        return `.${extName.toLowerCase().trim().replace(/^\.+/g, '')}`;
+    }
+}
+
+
+/**
+ * Get state production environment.
+ * Use for building options.
+ *
+ * @returns {boolean}
+ *   Prod argument availability.
+ */
 function isProdEnv() {
     return process.argv.indexOf('--prod') !== -1;
 }
 
+// Gulp commands
 gulp.task('html', compileHTML);
 gulp.task('css', compileCSS);
 gulp.task('js', compileJS);
 gulp.task('serve', serve);
 gulp.task('watch', watch);
+gulp.task('clear', clear);
 gulp.task('dev', gulp.parallel([ 'serve', 'watch' ]));
-gulp.task('default', gulp.parallel([ 'html', 'css', 'js' ]));
+gulp.task('default', gulp.series('clear', gulp.parallel([ 'html', 'css', 'js' ])));
